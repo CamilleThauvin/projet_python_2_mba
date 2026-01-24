@@ -1,0 +1,5 @@
+# Outils de développement et qualité de code
+flake8==7.3.0
+autopep8==2.3.2
+pytest==9.0.2
+pytest-cov==7.0.0

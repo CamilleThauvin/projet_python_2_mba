@@ -1,5 +1,4 @@
 """Tests pour le service de statistiques."""
-import pytest
 from banking_api.services import stats_service
 
 

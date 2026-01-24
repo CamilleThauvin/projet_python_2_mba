@@ -1,5 +1,4 @@
 """Configuration Pytest et fixtures partagées."""
-import os
 import pytest
 import pandas as pd
 from fastapi.testclient import TestClient
@@ -78,11 +77,20 @@ def mock_csv_path(monkeypatch, sample_csv_path):
         return sample_csv_path
 
     # Mock dans tous les services
-    from banking_api.services import transactions_service, stats_service, fraud_detection_service, customer_service
+    from banking_api.services import (
+        transactions_service,
+        stats_service,
+        fraud_detection_service,
+        customer_service
+    )
 
-    monkeypatch.setattr(transactions_service, '_get_csv_path', mock_get_csv_path)
-    monkeypatch.setattr(stats_service, '_get_csv_path', mock_get_csv_path)
-    monkeypatch.setattr(fraud_detection_service, '_get_csv_path', mock_get_csv_path)
-    monkeypatch.setattr(customer_service, '_get_csv_path', mock_get_csv_path)
+    monkeypatch.setattr(transactions_service, '_get_csv_path',
+                        mock_get_csv_path)
+    monkeypatch.setattr(stats_service, '_get_csv_path',
+                        mock_get_csv_path)
+    monkeypatch.setattr(fraud_detection_service, '_get_csv_path',
+                        mock_get_csv_path)
+    monkeypatch.setattr(customer_service, '_get_csv_path',
+                        mock_get_csv_path)
 
     return sample_csv_path

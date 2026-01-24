@@ -50,7 +50,6 @@ def test_fraud_prediction_zero_balance():
 
 def test_fraud_prediction_precision_zero_flagged():
     """Test du calcul de précision quand aucune fraude n'est flaggée."""
-    from banking_api.services.fraud_detection_service import get_fraud_summary
     # Ce test utilise les données de test où flagged peut être 0
     # La précision devrait être 0.0 dans ce cas
 
