@@ -83,8 +83,12 @@ def get_amount_distribution(bins: int = 10) -> Dict[str, Any]:
         # Créer des bins personnalisés pour avoir des intervalles lisibles
         max_amount: float = df['amount'].max()
 
-        # Définir des bins standards
-        bin_edges: List[float] = [0, 100, 500, 1000, 5000, 10000, 50000, 100000, 500000, 1000000, max_amount + 1]
+        # Définir des bins standards et ne garder que ceux inférieurs au max
+        standard_bins: List[float] = [0, 100, 500, 1000, 5000, 10000, 50000, 100000, 500000, 1000000]
+        bin_edges: List[float] = [b for b in standard_bins if b <= max_amount]
+
+        # Ajouter le max + 1 pour inclure toutes les valeurs
+        bin_edges.append(max_amount + 1)
 
         # Calculer l'histogramme
         counts, edges = np.histogram(df['amount'], bins=bin_edges)
