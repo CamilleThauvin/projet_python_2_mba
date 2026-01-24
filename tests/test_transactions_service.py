@@ -1,5 +1,4 @@
 """Tests pour le service de gestion des transactions."""
-import pytest
 from banking_api.services import transactions_service
 
 

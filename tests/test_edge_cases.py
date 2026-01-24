@@ -1,5 +1,4 @@
 """Tests pour les cas limites et edge cases."""
-import pytest
 from banking_api.services import transactions_service, customer_service, fraud_detection_service
 
 
