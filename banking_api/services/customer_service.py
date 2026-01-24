@@ -1,6 +1,6 @@
 """Service de gestion des profils clients."""
 import os
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any
 import pandas as pd
 from fastapi import HTTPException
 
@@ -152,7 +152,12 @@ def get_top_customers(n: int = 10, by: str = "volume") -> List[Dict[str, Any]]:
         }).reset_index()
 
         # Aplatir les colonnes
-        customer_stats.columns = ['customer_id', 'transaction_count', 'total_amount', 'avg_amount', 'fraud_count']
+        customer_stats.columns = [
+            'customer_id',
+            'transaction_count',
+            'total_amount',
+            'avg_amount',
+            'fraud_count']
 
         # Trier selon le critère
         if by == "count":

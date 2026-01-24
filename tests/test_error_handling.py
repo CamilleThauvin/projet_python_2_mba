@@ -1,8 +1,12 @@
 """Tests pour la gestion d'erreurs et les cas limites."""
 import pytest
-import os
 from fastapi import HTTPException
-from banking_api.services import transactions_service, stats_service, fraud_detection_service, customer_service
+from banking_api.services import (
+    transactions_service,
+    stats_service,
+    fraud_detection_service,
+    customer_service
+)
 
 
 def test_transactions_service_missing_csv(monkeypatch):

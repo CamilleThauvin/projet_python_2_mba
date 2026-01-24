@@ -3,7 +3,7 @@ import unittest
 import os
 import tempfile
 import pandas as pd
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 from fastapi import HTTPException
 from banking_api.services import transactions_service
 
@@ -36,7 +36,10 @@ class TestTransactionsService(unittest.TestCase):
 
     def setUp(self):
         """Configuration avant chaque test."""
-        self.patcher = patch.object(transactions_service, '_get_csv_path', return_value=self.csv_path)
+        self.patcher = patch.object(
+            transactions_service,
+            '_get_csv_path',
+            return_value=self.csv_path)
         self.patcher.start()
 
     def tearDown(self):
@@ -157,9 +160,14 @@ class TestTransactionsService(unittest.TestCase):
 
     def test_missing_csv_file(self):
         """Test avec fichier CSV manquant."""
-        with patch.object(transactions_service, '_get_csv_path', return_value='/nonexistent/file.csv'):
+        with patch.object(
+            transactions_service,
+            '_get_csv_path',
+            return_value='/nonexistent/file.csv'
+        ):
             with self.assertRaises(HTTPException) as context:
-                transactions_service.get_paginated_transactions(page=1, limit=10)
+                transactions_service.get_paginated_transactions(
+                    page=1, limit=10)
 
             self.assertEqual(context.exception.status_code, 404)
 
