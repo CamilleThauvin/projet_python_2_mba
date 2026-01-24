@@ -48,7 +48,7 @@ def test_get_customer_profile_fraudulent(mock_csv_path):
     """Test de profil pour un client avec fraude."""
     profile = customer_service.get_customer_profile('C1666544295')
 
-    assert profile['fraudulent'] == True
+    assert profile['fraudulent']
     assert profile['fraud_count'] == 1
 
 
@@ -56,7 +56,7 @@ def test_get_customer_profile_not_fraudulent(mock_csv_path):
     """Test de profil pour un client sans fraude."""
     profile = customer_service.get_customer_profile('C1231006815')
 
-    assert profile['fraudulent'] == False
+    assert profile['fraudulent'] is False
     assert profile['fraud_count'] == 0
 
 

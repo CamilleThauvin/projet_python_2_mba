@@ -3,7 +3,12 @@ from typing import Optional, Dict, Any, List
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 import os
-from banking_api.services import transactions_service, stats_service, fraud_detection_service, customer_service
+from banking_api.services import (
+    transactions_service,
+    stats_service,
+    fraud_detection_service,
+    customer_service
+)
 
 app = FastAPI(title="Banking Transactions API", version="1.0.0")
 
@@ -103,7 +108,8 @@ def get_transaction(transaction_id: str) -> Dict[str, Any]:
     Dict[str, Any]
         La transaction trouvée
     """
-    transaction: Optional[Dict[str, Any]] = transactions_service.get_transaction_by_id(transaction_id)
+    transaction: Optional[Dict[str, Any]
+                          ] = transactions_service.get_transaction_by_id(transaction_id)
     if transaction is None:
         raise HTTPException(status_code=404, detail="Transaction non trouvée")
     return transaction
@@ -207,7 +213,8 @@ def get_transactions_by_customer(customer_id: str) -> Dict[str, Any]:
     Dict[str, Any]
         Transactions du client
     """
-    transactions: List[Dict[str, Any]] = transactions_service.get_transactions_by_customer(customer_id)
+    transactions: List[Dict[str, Any]
+                       ] = transactions_service.get_transactions_by_customer(customer_id)
     return {"customer_id": customer_id, "count": len(transactions), "transactions": transactions}
 
 
@@ -226,7 +233,8 @@ def get_transactions_to_customer(customer_id: str) -> Dict[str, Any]:
     Dict[str, Any]
         Transactions reçues
     """
-    transactions: List[Dict[str, Any]] = transactions_service.get_transactions_to_customer(customer_id)
+    transactions: List[Dict[str, Any]
+                       ] = transactions_service.get_transactions_to_customer(customer_id)
     return {"customer_id": customer_id, "count": len(transactions), "transactions": transactions}
 
 
