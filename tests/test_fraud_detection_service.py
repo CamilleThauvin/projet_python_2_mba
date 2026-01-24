@@ -1,5 +1,4 @@
 """Tests pour le service de détection de fraude."""
-import pytest
 from banking_api.services import fraud_detection_service
 
 

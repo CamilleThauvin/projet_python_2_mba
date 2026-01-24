@@ -194,9 +194,9 @@ def get_recent_transactions(n: int = 10) -> List[Dict[str, Any]]:
 
 
 def search_transactions(type_filter: Optional[str] = None,
-                       is_fraud: Optional[int] = None,
-                       amount_min: Optional[float] = None,
-                       amount_max: Optional[float] = None) -> List[Dict[str, Any]]:
+                        is_fraud: Optional[int] = None,
+                        amount_min: Optional[float] = None,
+                        amount_max: Optional[float] = None) -> List[Dict[str, Any]]:
     """
     Recherche multicritère de transactions.
 

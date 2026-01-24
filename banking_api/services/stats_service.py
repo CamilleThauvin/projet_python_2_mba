@@ -84,7 +84,8 @@ def get_amount_distribution(bins: int = 10) -> Dict[str, Any]:
         max_amount: float = df['amount'].max()
 
         # Définir des bins standards et ne garder que ceux inférieurs au max
-        standard_bins: List[float] = [0, 100, 500, 1000, 5000, 10000, 50000, 100000, 500000, 1000000]
+        standard_bins: List[float] = [0, 100, 500, 1000,
+                                      5000, 10000, 50000, 100000, 500000, 1000000]
         bin_edges: List[float] = [b for b in standard_bins if b <= max_amount]
 
         # Ajouter le max + 1 pour inclure toutes les valeurs
@@ -96,10 +97,10 @@ def get_amount_distribution(bins: int = 10) -> Dict[str, Any]:
         # Créer les labels des bins
         bin_labels: List[str] = []
         for i in range(len(edges) - 1):
-            if edges[i+1] == max_amount + 1:
+            if edges[i + 1] == max_amount + 1:
                 bin_labels.append(f"{int(edges[i])}+")
             else:
-                bin_labels.append(f"{int(edges[i])}-{int(edges[i+1])}")
+                bin_labels.append(f"{int(edges[i])}-{int(edges[i + 1])}")
 
         return {
             "bins": bin_labels,

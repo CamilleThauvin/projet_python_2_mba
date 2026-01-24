@@ -35,7 +35,10 @@ class TestFraudDetectionService(unittest.TestCase):
 
     def setUp(self):
         """Configuration avant chaque test."""
-        self.patcher = patch.object(fraud_detection_service, '_get_csv_path', return_value=self.csv_path)
+        self.patcher = patch.object(
+            fraud_detection_service,
+            '_get_csv_path',
+            return_value=self.csv_path)
         self.patcher.start()
 
     def tearDown(self):
