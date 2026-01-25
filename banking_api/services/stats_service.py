@@ -41,10 +41,18 @@ def get_overview() -> Dict[str, Any]:
     try:
         df: pd.DataFrame = pd.read_csv(csv_path)
 
+        # Clean amount column
+        df['amount'] = df['amount'].astype(str).str.replace('$', '').str.replace(',', '').astype(float)
+
+        # Add fraud detection
+        df['isFraud'] = df['errors'].apply(
+            lambda x: 1 if pd.notna(x) and str(x).strip() != '' else 0
+        )
+
         total_transactions: int = len(df)
         fraud_rate: float = df['isFraud'].mean()
         avg_amount: float = df['amount'].mean()
-        most_common_type: str = df['type'].mode()[0]
+        most_common_type: str = df['use_chip'].mode()[0]
 
         return {
             "total_transactions": total_transactions,
@@ -79,6 +87,9 @@ def get_amount_distribution(bins: int = 10) -> Dict[str, Any]:
 
     try:
         df: pd.DataFrame = pd.read_csv(csv_path)
+
+        # Clean amount column
+        df['amount'] = df['amount'].astype(str).str.replace('$', '').str.replace(',', '').astype(float)
 
         # Créer des bins personnalisés pour avoir des intervalles lisibles
         max_amount: float = df['amount'].max()
@@ -131,8 +142,11 @@ def get_stats_by_type() -> List[Dict[str, Any]]:
     try:
         df: pd.DataFrame = pd.read_csv(csv_path)
 
-        # Grouper par type
-        grouped = df.groupby('type').agg({
+        # Clean amount column
+        df['amount'] = df['amount'].astype(str).str.replace('$', '').str.replace(',', '').astype(float)
+
+        # Grouper par use_chip (transaction type)
+        grouped = df.groupby('use_chip').agg({
             'amount': ['count', 'mean', 'sum']
         }).reset_index()
 
@@ -175,19 +189,28 @@ def get_daily_stats() -> List[Dict[str, Any]]:
     try:
         df: pd.DataFrame = pd.read_csv(csv_path)
 
-        # Grouper par step (jour)
-        daily_stats = df.groupby('step').agg({
+        # Clean amount column
+        df['amount'] = df['amount'].astype(str).str.replace('$', '').str.replace(',', '').astype(float)
+
+        # Convert date to datetime and extract date only
+        df['date'] = pd.to_datetime(df['date']).dt.date
+
+        # Grouper par date
+        daily_stats = df.groupby('date').agg({
             'amount': ['count', 'mean', 'sum']
         }).reset_index()
 
         # Aplatir les colonnes
         daily_stats.columns = ['day', 'count', 'avg_amount', 'total_amount']
 
+        # Convert date to string for JSON serialization
+        daily_stats['day'] = daily_stats['day'].astype(str)
+
         # Convertir en liste de dictionnaires
         results: List[Dict[str, Any]] = []
         for _, row in daily_stats.iterrows():
             results.append({
-                'day': int(row['day']),
+                'day': str(row['day']),
                 'count': int(row['count']),
                 'avg_amount': round(float(row['avg_amount']), 2),
                 'total_amount': round(float(row['total_amount']), 2)
