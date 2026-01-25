@@ -47,15 +47,15 @@ def get_customers(page: int = 1, limit: int = 10) -> Dict[str, Any]:
     try:
         df: pd.DataFrame = pd.read_csv(csv_path)
 
-        # Obtenir les clients uniques
-        unique_customers: pd.Series = df['nameOrig'].unique()
+        # Obtenir les clients uniques (client_id)
+        unique_customers: pd.Series = df['client_id'].unique()
         total: int = len(unique_customers)
 
         # Pagination
         start_idx: int = (page - 1) * limit
         end_idx: int = start_idx + limit
 
-        customers_page: List[str] = unique_customers[start_idx:end_idx].tolist()
+        customers_page: List[int] = unique_customers[start_idx:end_idx].tolist()
 
         return {
             "page": page,
@@ -95,8 +95,16 @@ def get_customer_profile(customer_id: str) -> Dict[str, Any]:
     try:
         df: pd.DataFrame = pd.read_csv(csv_path)
 
+        # Clean amount column
+        df['amount'] = df['amount'].astype(str).str.replace('$', '').str.replace(',', '').astype(float)
+
+        # Add fraud detection
+        df['isFraud'] = df['errors'].apply(
+            lambda x: 1 if pd.notna(x) and str(x).strip() != '' else 0
+        )
+
         # Filtrer les transactions du client
-        customer_transactions: pd.DataFrame = df[df['nameOrig'] == customer_id]
+        customer_transactions: pd.DataFrame = df[df['client_id'] == int(customer_id)]
 
         if len(customer_transactions) == 0:
             raise HTTPException(status_code=404, detail="Client non trouvé")
@@ -112,7 +120,7 @@ def get_customer_profile(customer_id: str) -> Dict[str, Any]:
             "transactions_count": transactions_count,
             "avg_amount": round(avg_amount, 2),
             "total_amount": round(total_amount, 2),
-            "fraudulent": fraudulent,
+            "fraudulent": bool(fraudulent),
             "fraud_count": int(fraud_count)
         }
     except HTTPException:
@@ -145,8 +153,16 @@ def get_top_customers(n: int = 10, by: str = "volume") -> List[Dict[str, Any]]:
     try:
         df: pd.DataFrame = pd.read_csv(csv_path)
 
-        # Grouper par client
-        customer_stats = df.groupby('nameOrig').agg({
+        # Clean amount column
+        df['amount'] = df['amount'].astype(str).str.replace('$', '').str.replace(',', '').astype(float)
+
+        # Add fraud detection
+        df['isFraud'] = df['errors'].apply(
+            lambda x: 1 if pd.notna(x) and str(x).strip() != '' else 0
+        )
+
+        # Grouper par client_id
+        customer_stats = df.groupby('client_id').agg({
             'amount': ['count', 'sum', 'mean'],
             'isFraud': 'sum'
         }).reset_index()
@@ -172,7 +188,7 @@ def get_top_customers(n: int = 10, by: str = "volume") -> List[Dict[str, Any]]:
         results: List[Dict[str, Any]] = []
         for _, row in top_customers.iterrows():
             results.append({
-                'customer_id': row['customer_id'],
+                'customer_id': int(row['customer_id']),
                 'transaction_count': int(row['transaction_count']),
                 'total_amount': round(float(row['total_amount']), 2),
                 'avg_amount': round(float(row['avg_amount']), 2),

@@ -93,60 +93,6 @@ def read_transactions(
     )
 
 
-@app.get("/api/transactions/{transaction_id}", tags=["Transactions"])
-def get_transaction(transaction_id: str) -> Dict[str, Any]:
-    """
-    Récupère une transaction par son ID.
-
-    Parameters
-    ----------
-    transaction_id : str
-        L'identifiant de la transaction
-
-    Returns
-    -------
-    Dict[str, Any]
-        La transaction trouvée
-    """
-    transaction: Optional[Dict[str, Any]
-                          ] = transactions_service.get_transaction_by_id(transaction_id)
-    if transaction is None:
-        raise HTTPException(status_code=404, detail="Transaction non trouvée")
-    return transaction
-
-
-@app.post("/api/transactions/search", tags=["Transactions"])
-def search_transactions(request: SearchRequest) -> Dict[str, Any]:
-    """
-    Recherche multicritère de transactions (POST avec corps JSON).
-
-    Parameters
-    ----------
-    request : SearchRequest
-        Critères de recherche
-
-    Returns
-    -------
-    Dict[str, Any]
-        Liste des transactions correspondantes
-    """
-    amount_min: Optional[float] = None
-    amount_max: Optional[float] = None
-
-    if request.amount_range and len(request.amount_range) == 2:
-        amount_min = request.amount_range[0]
-        amount_max = request.amount_range[1]
-
-    results: List[Dict[str, Any]] = transactions_service.search_transactions(
-        type_filter=request.type,
-        is_fraud=request.isFraud,
-        amount_min=amount_min,
-        amount_max=amount_max
-    )
-
-    return {"count": len(results), "transactions": results}
-
-
 @app.get("/api/transactions/types", tags=["Transactions"])
 def get_types() -> Dict[str, List[str]]:
     """
@@ -238,6 +184,60 @@ def get_transactions_to_customer(customer_id: str) -> Dict[str, Any]:
     return {"customer_id": customer_id, "count": len(transactions), "transactions": transactions}
 
 
+@app.post("/api/transactions/search", tags=["Transactions"])
+def search_transactions(request: SearchRequest) -> Dict[str, Any]:
+    """
+    Recherche multicritère de transactions (POST avec corps JSON).
+
+    Parameters
+    ----------
+    request : SearchRequest
+        Critères de recherche
+
+    Returns
+    -------
+    Dict[str, Any]
+        Liste des transactions correspondantes
+    """
+    amount_min: Optional[float] = None
+    amount_max: Optional[float] = None
+
+    if request.amount_range and len(request.amount_range) == 2:
+        amount_min = request.amount_range[0]
+        amount_max = request.amount_range[1]
+
+    results: List[Dict[str, Any]] = transactions_service.search_transactions(
+        type_filter=request.type,
+        is_fraud=request.isFraud,
+        amount_min=amount_min,
+        amount_max=amount_max
+    )
+
+    return {"count": len(results), "transactions": results}
+
+
+@app.get("/api/transactions/{transaction_id}", tags=["Transactions"])
+def get_transaction(transaction_id: str) -> Dict[str, Any]:
+    """
+    Récupère une transaction par son ID.
+
+    Parameters
+    ----------
+    transaction_id : str
+        L'identifiant de la transaction
+
+    Returns
+    -------
+    Dict[str, Any]
+        La transaction trouvée
+    """
+    transaction: Optional[Dict[str, Any]
+                          ] = transactions_service.get_transaction_by_id(transaction_id)
+    if transaction is None:
+        raise HTTPException(status_code=404, detail="Transaction non trouvée")
+    return transaction
+
+
 # ==================== STATS ROUTES ====================
 
 @app.get("/api/stats/overview", tags=["Statistiques"])
@@ -296,10 +296,10 @@ def get_daily_stats() -> List[Dict[str, Any]]:
 
 class FraudPredictRequest(BaseModel):
     """Modèle pour la prédiction de fraude."""
-    type: str
+    type: str  # use_chip type
     amount: float
-    oldbalanceOrg: float
-    newbalanceOrig: float
+    merchant_city: Optional[str] = ""
+    merchant_state: Optional[str] = ""
 
 
 @app.get("/api/fraud/summary", tags=["Fraude"])
@@ -346,8 +346,8 @@ def predict_fraud(request: FraudPredictRequest) -> Dict[str, Any]:
     return fraud_detection_service.predict_fraud(
         transaction_type=request.type,
         amount=request.amount,
-        oldbalance_org=request.oldbalanceOrg,
-        newbalance_orig=request.newbalanceOrig
+        merchant_city=request.merchant_city,
+        merchant_state=request.merchant_state
     )
 
 
