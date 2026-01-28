@@ -9,6 +9,18 @@ from banking_api.services import (
     fraud_detection_service,
     customer_service
 )
+from banking_api.models import (
+    OverviewResponse,
+    AmountDistributionBin,
+    StatsByType,
+    DailyStats,
+    CustomerListResponse,
+    CustomerProfile,
+    TopCustomer,
+    FraudSummary,
+    FraudByType,
+    FraudPrediction
+)
 
 app = FastAPI(title="Banking Transactions API", version="1.0.0")
 
@@ -240,7 +252,7 @@ def get_transaction(transaction_id: str) -> Dict[str, Any]:
 
 # ==================== STATS ROUTES ====================
 
-@app.get("/api/stats/overview", tags=["Statistiques"])
+@app.get("/api/stats/overview", tags=["Statistiques"], response_model=OverviewResponse)
 def get_stats_overview() -> Dict[str, Any]:
     """
     Statistiques globales du dataset.
@@ -253,7 +265,7 @@ def get_stats_overview() -> Dict[str, Any]:
     return stats_service.get_overview()
 
 
-@app.get("/api/stats/amount-distribution", tags=["Statistiques"])
+@app.get("/api/stats/amount-distribution", tags=["Statistiques"], response_model=AmountDistributionBin)
 def get_amount_distribution() -> Dict[str, Any]:
     """
     Histogramme du montant des transactions (en classes de valeurs).
@@ -266,7 +278,7 @@ def get_amount_distribution() -> Dict[str, Any]:
     return stats_service.get_amount_distribution()
 
 
-@app.get("/api/stats/by-type", tags=["Statistiques"])
+@app.get("/api/stats/by-type", tags=["Statistiques"], response_model=List[StatsByType])
 def get_stats_by_type() -> List[Dict[str, Any]]:
     """
     Montant total et nombre moyen de transactions par type.
@@ -279,7 +291,7 @@ def get_stats_by_type() -> List[Dict[str, Any]]:
     return stats_service.get_stats_by_type()
 
 
-@app.get("/api/stats/daily", tags=["Statistiques"])
+@app.get("/api/stats/daily", tags=["Statistiques"], response_model=List[DailyStats])
 def get_daily_stats() -> List[Dict[str, Any]]:
     """
     Moyenne et volume des transactions par jour (step).
@@ -302,7 +314,7 @@ class FraudPredictRequest(BaseModel):
     merchant_state: Optional[str] = ""
 
 
-@app.get("/api/fraud/summary", tags=["Fraude"])
+@app.get("/api/fraud/summary", tags=["Fraude"], response_model=FraudSummary)
 def get_fraud_summary() -> Dict[str, Any]:
     """
     Vue d'ensemble de la fraude.
@@ -315,7 +327,7 @@ def get_fraud_summary() -> Dict[str, Any]:
     return fraud_detection_service.get_fraud_summary()
 
 
-@app.get("/api/fraud/by-type", tags=["Fraude"])
+@app.get("/api/fraud/by-type", tags=["Fraude"], response_model=List[FraudByType])
 def get_fraud_by_type() -> List[Dict[str, Any]]:
     """
     Répartition du taux de fraude par type de transaction.
@@ -328,7 +340,7 @@ def get_fraud_by_type() -> List[Dict[str, Any]]:
     return fraud_detection_service.get_fraud_by_type()
 
 
-@app.post("/api/fraud/predict", tags=["Fraude"])
+@app.post("/api/fraud/predict", tags=["Fraude"], response_model=FraudPrediction)
 def predict_fraud(request: FraudPredictRequest) -> Dict[str, Any]:
     """
     Endpoint de scoring pour prédire si une transaction donnée est frauduleuse.
@@ -353,7 +365,7 @@ def predict_fraud(request: FraudPredictRequest) -> Dict[str, Any]:
 
 # ==================== CUSTOMERS ROUTES ====================
 
-@app.get("/api/customers", tags=["Clients"])
+@app.get("/api/customers", tags=["Clients"], response_model=CustomerListResponse)
 def get_customers(page: int = 1, limit: int = 10) -> Dict[str, Any]:
     """
     Liste paginée des clients (extraits de nameOrig).
@@ -373,7 +385,7 @@ def get_customers(page: int = 1, limit: int = 10) -> Dict[str, Any]:
     return customer_service.get_customers(page, limit)
 
 
-@app.get("/api/customers/top", tags=["Clients"])
+@app.get("/api/customers/top", tags=["Clients"], response_model=List[TopCustomer])
 def get_top_customers(n: int = 10, by: str = "volume") -> List[Dict[str, Any]]:
     """
     Top clients classés par volume total de transactions.
@@ -393,7 +405,7 @@ def get_top_customers(n: int = 10, by: str = "volume") -> List[Dict[str, Any]]:
     return customer_service.get_top_customers(n, by)
 
 
-@app.get("/api/customers/{customer_id}", tags=["Clients"])
+@app.get("/api/customers/{customer_id}", tags=["Clients"], response_model=CustomerProfile)
 def get_customer_profile(customer_id: str) -> Dict[str, Any]:
     """
     Profil client synthétique.
