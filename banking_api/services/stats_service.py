@@ -4,7 +4,11 @@ from typing import Dict, List, Any
 import pandas as pd
 import numpy as np
 from fastapi import HTTPException
-from banking_api.services.fraud_labels_loader import is_fraud
+from banking_api.services.data_cache import (
+    get_cached_dataframe,
+    get_basic_stats,
+    get_stats_by_type_cached
+)
 
 
 def _get_csv_path() -> str:
@@ -23,7 +27,7 @@ def _get_csv_path() -> str:
 
 def get_overview() -> Dict[str, Any]:
     """
-    Statistiques globales du dataset.
+    Statistiques globales du dataset (avec cache).
 
     Returns
     -------
@@ -34,24 +38,9 @@ def get_overview() -> Dict[str, Any]:
         - avg_amount : montant moyen
         - most_common_type : type le plus fréquent
     """
-    csv_path: str = _get_csv_path()
-
-    if not os.path.exists(csv_path):
-        raise HTTPException(status_code=404, detail="Fichier de données non trouvé")
-
     try:
-        df: pd.DataFrame = pd.read_csv(csv_path)
-
-        # Clean amount column
-        df['amount'] = df['amount'].astype(str).str.replace('$', '').str.replace(',', '').astype(float)
-
-        # Add fraud detection using real labels from JSON
-        df['isFraud'] = df['id'].apply(lambda x: is_fraud(str(x)))
-
-        total_transactions: int = len(df)
-        fraud_rate: float = df['isFraud'].mean()
-        avg_amount: float = df['amount'].mean()
-        most_common_type: str = df['use_chip'].mode()[0]
+        # Utiliser le cache pour des performances optimales
+        total_transactions, fraud_rate, avg_amount, most_common_type = get_basic_stats()
 
         return {
             "total_transactions": total_transactions,
@@ -65,7 +54,7 @@ def get_overview() -> Dict[str, Any]:
 
 def get_amount_distribution(bins: int = 10) -> Dict[str, Any]:
     """
-    Histogramme du montant des transactions (en classes de valeurs).
+    Histogramme du montant des transactions (en classes de valeurs, avec cache).
 
     Parameters
     ----------
@@ -79,16 +68,9 @@ def get_amount_distribution(bins: int = 10) -> Dict[str, Any]:
         - bins : liste des intervalles
         - counts : nombre de transactions par intervalle
     """
-    csv_path: str = _get_csv_path()
-
-    if not os.path.exists(csv_path):
-        raise HTTPException(status_code=404, detail="Fichier de données non trouvé")
-
     try:
-        df: pd.DataFrame = pd.read_csv(csv_path)
-
-        # Clean amount column
-        df['amount'] = df['amount'].astype(str).str.replace('$', '').str.replace(',', '').astype(float)
+        # Utiliser le DataFrame en cache
+        df = get_cached_dataframe()
 
         # Créer des bins personnalisés pour avoir des intervalles lisibles
         max_amount: float = df['amount'].max()
@@ -122,7 +104,7 @@ def get_amount_distribution(bins: int = 10) -> Dict[str, Any]:
 
 def get_stats_by_type() -> List[Dict[str, Any]]:
     """
-    Montant total et nombre moyen de transactions par type.
+    Montant total et nombre moyen de transactions par type (avec cache).
 
     Returns
     -------
@@ -133,24 +115,9 @@ def get_stats_by_type() -> List[Dict[str, Any]]:
         - avg_amount : montant moyen
         - total_amount : montant total
     """
-    csv_path: str = _get_csv_path()
-
-    if not os.path.exists(csv_path):
-        raise HTTPException(status_code=404, detail="Fichier de données non trouvé")
-
     try:
-        df: pd.DataFrame = pd.read_csv(csv_path)
-
-        # Clean amount column
-        df['amount'] = df['amount'].astype(str).str.replace('$', '').str.replace(',', '').astype(float)
-
-        # Grouper par use_chip (transaction type)
-        grouped = df.groupby('use_chip').agg({
-            'amount': ['count', 'mean', 'sum']
-        }).reset_index()
-
-        # Aplatir les colonnes multi-niveaux
-        grouped.columns = ['type', 'count', 'avg_amount', 'total_amount']
+        # Utiliser le cache
+        grouped = get_stats_by_type_cached()
 
         # Convertir en liste de dictionnaires
         results: List[Dict[str, Any]] = []
@@ -169,7 +136,7 @@ def get_stats_by_type() -> List[Dict[str, Any]]:
 
 def get_daily_stats() -> List[Dict[str, Any]]:
     """
-    Moyenne et volume des transactions par jour (step).
+    Moyenne et volume des transactions par jour (avec cache).
 
     Returns
     -------
@@ -180,16 +147,9 @@ def get_daily_stats() -> List[Dict[str, Any]]:
         - avg_amount : montant moyen
         - total_amount : montant total
     """
-    csv_path: str = _get_csv_path()
-
-    if not os.path.exists(csv_path):
-        raise HTTPException(status_code=404, detail="Fichier de données non trouvé")
-
     try:
-        df: pd.DataFrame = pd.read_csv(csv_path)
-
-        # Clean amount column
-        df['amount'] = df['amount'].astype(str).str.replace('$', '').str.replace(',', '').astype(float)
+        # Utiliser le DataFrame en cache
+        df = get_cached_dataframe()
 
         # Convert date to datetime and extract date only
         df['date'] = pd.to_datetime(df['date']).dt.date
