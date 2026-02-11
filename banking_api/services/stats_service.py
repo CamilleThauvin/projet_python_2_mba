@@ -4,6 +4,7 @@ from typing import Dict, List, Any
 import pandas as pd
 import numpy as np
 from fastapi import HTTPException
+from banking_api.services.fraud_labels_loader import is_fraud
 
 
 def _get_csv_path() -> str:
@@ -44,10 +45,8 @@ def get_overview() -> Dict[str, Any]:
         # Clean amount column
         df['amount'] = df['amount'].astype(str).str.replace('$', '').str.replace(',', '').astype(float)
 
-        # Add fraud detection
-        df['isFraud'] = df['errors'].apply(
-            lambda x: 1 if pd.notna(x) and str(x).strip() != '' else 0
-        )
+        # Add fraud detection using real labels from JSON
+        df['isFraud'] = df['id'].apply(lambda x: is_fraud(str(x)))
 
         total_transactions: int = len(df)
         fraud_rate: float = df['isFraud'].mean()
