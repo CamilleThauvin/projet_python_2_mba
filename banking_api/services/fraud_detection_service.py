@@ -3,6 +3,7 @@ import os
 from typing import Dict, List, Any
 import pandas as pd
 from fastapi import HTTPException
+from banking_api.services.fraud_labels_loader import is_fraud
 
 
 def _get_csv_path() -> str:
@@ -40,10 +41,8 @@ def get_fraud_summary() -> Dict[str, Any]:
     try:
         df: pd.DataFrame = pd.read_csv(csv_path)
 
-        # Add fraud detection based on errors column
-        df['isFraud'] = df['errors'].apply(
-            lambda x: 1 if pd.notna(x) and str(x).strip() != '' else 0
-        )
+        # Add fraud detection using real labels from JSON
+        df['isFraud'] = df['id'].apply(lambda x: is_fraud(str(x)))
 
         # For this dataset, we'll treat all fraud as flagged
         total_frauds: int = df['isFraud'].sum()
@@ -84,10 +83,8 @@ def get_fraud_by_type() -> List[Dict[str, Any]]:
     try:
         df: pd.DataFrame = pd.read_csv(csv_path)
 
-        # Add fraud detection based on errors column
-        df['isFraud'] = df['errors'].apply(
-            lambda x: 1 if pd.notna(x) and str(x).strip() != '' else 0
-        )
+        # Add fraud detection using real labels from JSON
+        df['isFraud'] = df['id'].apply(lambda x: is_fraud(str(x)))
 
         # Grouper par use_chip (transaction type)
         fraud_by_type = df.groupby('use_chip').agg({
