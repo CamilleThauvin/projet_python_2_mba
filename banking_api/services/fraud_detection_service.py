@@ -3,7 +3,10 @@ import os
 from typing import Dict, List, Any
 import pandas as pd
 from fastapi import HTTPException
-from banking_api.services.fraud_labels_loader import is_fraud
+from banking_api.services.data_cache import (
+    get_fraud_summary_cached,
+    get_fraud_by_type_cached
+)
 
 
 def _get_csv_path() -> str:
@@ -22,7 +25,7 @@ def _get_csv_path() -> str:
 
 def get_fraud_summary() -> Dict[str, Any]:
     """
-    Vue d'ensemble de la fraude dans le dataset.
+    Vue d'ensemble de la fraude dans le dataset (avec cache).
 
     Returns
     -------
@@ -33,24 +36,9 @@ def get_fraud_summary() -> Dict[str, Any]:
         - precision : précision de la détection
         - recall : rappel de la détection
     """
-    csv_path: str = _get_csv_path()
-
-    if not os.path.exists(csv_path):
-        raise HTTPException(status_code=404, detail="Fichier de données non trouvé")
-
     try:
-        df: pd.DataFrame = pd.read_csv(csv_path)
-
-        # Add fraud detection using real labels from JSON
-        df['isFraud'] = df['id'].apply(lambda x: is_fraud(str(x)))
-
-        # For this dataset, we'll treat all fraud as flagged
-        total_frauds: int = df['isFraud'].sum()
-        flagged: int = total_frauds  # All frauds are considered flagged in this dataset
-
-        # Simplified metrics since we don't have separate flagging
-        precision: float = 1.0 if flagged > 0 else 0.0
-        recall: float = 1.0 if total_frauds > 0 else 0.0
+        # Utiliser le cache pour des performances optimales
+        total_frauds, flagged, precision, recall = get_fraud_summary_cached()
 
         return {
             "total_frauds": int(total_frauds),
@@ -64,7 +52,7 @@ def get_fraud_summary() -> Dict[str, Any]:
 
 def get_fraud_by_type() -> List[Dict[str, Any]]:
     """
-    Répartition du taux de fraude par type de transaction.
+    Répartition du taux de fraude par type de transaction (avec cache).
 
     Returns
     -------
@@ -75,24 +63,9 @@ def get_fraud_by_type() -> List[Dict[str, Any]]:
         - fraud_count : nombre de fraudes
         - fraud_rate : taux de fraude (%)
     """
-    csv_path: str = _get_csv_path()
-
-    if not os.path.exists(csv_path):
-        raise HTTPException(status_code=404, detail="Fichier de données non trouvé")
-
     try:
-        df: pd.DataFrame = pd.read_csv(csv_path)
-
-        # Add fraud detection using real labels from JSON
-        df['isFraud'] = df['id'].apply(lambda x: is_fraud(str(x)))
-
-        # Grouper par use_chip (transaction type)
-        fraud_by_type = df.groupby('use_chip').agg({
-            'isFraud': ['count', 'sum', 'mean']
-        }).reset_index()
-
-        # Aplatir les colonnes
-        fraud_by_type.columns = ['type', 'total_transactions', 'fraud_count', 'fraud_rate']
+        # Utiliser le cache
+        fraud_by_type = get_fraud_by_type_cached()
 
         # Convertir en liste de dictionnaires
         results: List[Dict[str, Any]] = []

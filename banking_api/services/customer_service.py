@@ -3,7 +3,7 @@ import os
 from typing import Dict, List, Any
 import pandas as pd
 from fastapi import HTTPException
-from banking_api.services.fraud_labels_loader import is_fraud
+from banking_api.services.data_cache import get_cached_dataframe
 
 
 def _get_csv_path() -> str:
@@ -94,13 +94,8 @@ def get_customer_profile(customer_id: str) -> Dict[str, Any]:
         raise HTTPException(status_code=404, detail="Fichier de données non trouvé")
 
     try:
-        df: pd.DataFrame = pd.read_csv(csv_path)
-
-        # Clean amount column
-        df['amount'] = df['amount'].astype(str).str.replace('$', '').str.replace(',', '').astype(float)
-
-        # Add fraud detection using real labels from JSON
-        df['isFraud'] = df['id'].apply(lambda x: is_fraud(str(x)))
+        # Utiliser le DataFrame en cache (déjà nettoyé et avec isFraud)
+        df = get_cached_dataframe()
 
         # Filtrer les transactions du client
         customer_transactions: pd.DataFrame = df[df['client_id'] == int(customer_id)]
@@ -150,13 +145,8 @@ def get_top_customers(n: int = 10, by: str = "volume") -> List[Dict[str, Any]]:
         raise HTTPException(status_code=404, detail="Fichier de données non trouvé")
 
     try:
-        df: pd.DataFrame = pd.read_csv(csv_path)
-
-        # Clean amount column
-        df['amount'] = df['amount'].astype(str).str.replace('$', '').str.replace(',', '').astype(float)
-
-        # Add fraud detection using real labels from JSON
-        df['isFraud'] = df['id'].apply(lambda x: is_fraud(str(x)))
+        # Utiliser le DataFrame en cache (déjà nettoyé et avec isFraud)
+        df = get_cached_dataframe()
 
         # Grouper par client_id
         customer_stats = df.groupby('client_id').agg({
