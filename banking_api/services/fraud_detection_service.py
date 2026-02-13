@@ -6,8 +6,10 @@ from typing import Any, Dict, List
 import pandas as pd
 from fastapi import HTTPException
 
-from banking_api.services.data_cache import (get_fraud_by_type_cached,
-                                             get_fraud_summary_cached)
+from banking_api.services.data_cache import (
+    get_fraud_by_type_cached,
+    get_fraud_summary_cached,
+)
 
 
 def _get_csv_path() -> str:

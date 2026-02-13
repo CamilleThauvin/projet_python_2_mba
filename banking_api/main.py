@@ -6,12 +6,24 @@ from typing import Any, Dict, List, Optional
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
-from banking_api.models import (AmountDistributionBin, CustomerListResponse,
-                                CustomerProfile, DailyStats, FraudByType,
-                                FraudPrediction, FraudSummary,
-                                OverviewResponse, StatsByType, TopCustomer)
-from banking_api.services import (customer_service, fraud_detection_service,
-                                  stats_service, transactions_service)
+from banking_api.models import (
+    AmountDistributionBin,
+    CustomerListResponse,
+    CustomerProfile,
+    DailyStats,
+    FraudByType,
+    FraudPrediction,
+    FraudSummary,
+    OverviewResponse,
+    StatsByType,
+    TopCustomer,
+)
+from banking_api.services import (
+    customer_service,
+    fraud_detection_service,
+    stats_service,
+    transactions_service,
+)
 
 app = FastAPI(title="Banking Transactions API", version="1.0.0")
 
@@ -368,8 +380,8 @@ def predict_fraud(request: FraudPredictRequest) -> Dict[str, Any]:
     return fraud_detection_service.predict_fraud(
         transaction_type=request.type,
         amount=request.amount,
-        merchant_city=request.merchant_city,
-        merchant_state=request.merchant_state,
+        merchant_city=request.merchant_city or "",
+        merchant_state=request.merchant_state or "",
     )
 
 
