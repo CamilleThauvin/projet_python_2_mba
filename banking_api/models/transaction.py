@@ -6,6 +6,7 @@ class Transaction(BaseModel):
     Modèle représentant une transaction bancaire.
     Style numpy pour la documentation.
     """
+
     id: str
     amount: float
     type: str

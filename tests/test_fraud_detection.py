@@ -1,5 +1,7 @@
 """Tests pour le service de détection de fraude."""
+
 import pytest
+
 from banking_api.services import fraud_detection_service
 
 
@@ -12,14 +14,14 @@ class TestFraudPrediction:
             transaction_type="Online Transaction",
             amount=15000.0,
             merchant_city="New York",
-            merchant_state="NY"
+            merchant_state="NY",
         )
 
         # Vérifications
-        assert result['isFraud'] == True
-        assert result['probability'] >= 0.5
-        assert len(result['reasons']) > 0
-        assert "Montant très élevé" in result['reasons']
+        assert result["isFraud"] == True
+        assert result["probability"] >= 0.5
+        assert len(result["reasons"]) > 0
+        assert "Montant très élevé" in result["reasons"]
 
     def test_predict_fraud_normal_amount(self):
         """Test : montant normal ne devrait PAS être fraude."""
@@ -27,13 +29,13 @@ class TestFraudPrediction:
             transaction_type="Chip Transaction",
             amount=50.0,
             merchant_city="Paris",
-            merchant_state="FR"
+            merchant_state="FR",
         )
 
         # Vérifications
-        assert result['isFraud'] == False
-        assert result['probability'] < 0.5
-        assert result['reasons'] == ["Transaction normale"]
+        assert result["isFraud"] == False
+        assert result["probability"] < 0.5
+        assert result["reasons"] == ["Transaction normale"]
 
     def test_predict_fraud_negative_amount(self):
         """Test : montant négatif devrait être fraude."""
@@ -41,11 +43,11 @@ class TestFraudPrediction:
             transaction_type="Swipe Transaction",
             amount=-100.0,
             merchant_city="London",
-            merchant_state="UK"
+            merchant_state="UK",
         )
 
-        assert result['isFraud'] == True
-        assert "Montant négatif détecté" in result['reasons']
+        assert result["isFraud"] == True
+        assert "Montant négatif détecté" in result["reasons"]
 
     def test_predict_fraud_very_low_amount(self):
         """Test : montant très faible (test de carte volée)."""
@@ -53,11 +55,11 @@ class TestFraudPrediction:
             transaction_type="Online Transaction",
             amount=0.5,
             merchant_city="Madrid",
-            merchant_state="ES"
+            merchant_state="ES",
         )
 
         # Montant très faible ajoute +0.1 de probabilité
-        assert result['probability'] >= 0.1
+        assert result["probability"] >= 0.1
 
 
 class TestFraudSummary:
@@ -68,26 +70,26 @@ class TestFraudSummary:
         result = fraud_detection_service.get_fraud_summary()
 
         # Vérifier que toutes les clés sont présentes
-        assert 'total_frauds' in result
-        assert 'flagged' in result
-        assert 'precision' in result
-        assert 'recall' in result
+        assert "total_frauds" in result
+        assert "flagged" in result
+        assert "precision" in result
+        assert "recall" in result
 
         # Vérifier les types
-        assert isinstance(result['total_frauds'], int)
-        assert isinstance(result['flagged'], int)
-        assert isinstance(result['precision'], float)
-        assert isinstance(result['recall'], float)
+        assert isinstance(result["total_frauds"], int)
+        assert isinstance(result["flagged"], int)
+        assert isinstance(result["precision"], float)
+        assert isinstance(result["recall"], float)
 
     def test_get_fraud_summary_values(self):
         """Test : les valeurs sont cohérentes."""
         result = fraud_detection_service.get_fraud_summary()
 
         # Valeurs logiques
-        assert result['total_frauds'] >= 0
-        assert result['flagged'] >= 0
-        assert 0.0 <= result['precision'] <= 1.0
-        assert 0.0 <= result['recall'] <= 1.0
+        assert result["total_frauds"] >= 0
+        assert result["flagged"] >= 0
+        assert 0.0 <= result["precision"] <= 1.0
+        assert 0.0 <= result["recall"] <= 1.0
 
 
 class TestFraudByType:
@@ -103,10 +105,10 @@ class TestFraudByType:
 
         # Vérifier la structure du premier élément
         first_item = result[0]
-        assert 'type' in first_item
-        assert 'total_transactions' in first_item
-        assert 'fraud_count' in first_item
-        assert 'fraud_rate' in first_item
+        assert "type" in first_item
+        assert "total_transactions" in first_item
+        assert "fraud_count" in first_item
+        assert "fraud_rate" in first_item
 
     def test_get_fraud_by_type_values(self):
         """Test : les valeurs sont cohérentes."""
@@ -114,9 +116,9 @@ class TestFraudByType:
 
         for item in result:
             # Valeurs logiques
-            assert item['total_transactions'] > 0
-            assert item['fraud_count'] >= 0
-            assert 0.0 <= item['fraud_rate'] <= 100.0
+            assert item["total_transactions"] > 0
+            assert item["fraud_count"] >= 0
+            assert 0.0 <= item["fraud_rate"] <= 100.0
 
             # Le nombre de fraudes ne peut pas dépasser le total
-            assert item['fraud_count'] <= item['total_transactions']
+            assert item["fraud_count"] <= item["total_transactions"]

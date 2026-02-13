@@ -1,40 +1,34 @@
 """API REST pour les transactions bancaires."""
-from typing import Optional, Dict, Any, List
+
+import os
+from typing import Any, Dict, List, Optional
+
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-import os
-from banking_api.services import (
-    transactions_service,
-    stats_service,
-    fraud_detection_service,
-    customer_service
-)
-from banking_api.models import (
-    OverviewResponse,
-    AmountDistributionBin,
-    StatsByType,
-    DailyStats,
-    CustomerListResponse,
-    CustomerProfile,
-    TopCustomer,
-    FraudSummary,
-    FraudByType,
-    FraudPrediction
-)
+
+from banking_api.models import (AmountDistributionBin, CustomerListResponse,
+                                CustomerProfile, DailyStats, FraudByType,
+                                FraudPrediction, FraudSummary,
+                                OverviewResponse, StatsByType, TopCustomer)
+from banking_api.services import (customer_service, fraud_detection_service,
+                                  stats_service, transactions_service)
 
 app = FastAPI(title="Banking Transactions API", version="1.0.0")
 
 
 # ==================== MODELS ====================
 
+
 class SearchRequest(BaseModel):
     """Modèle pour la recherche de transactions."""
+
     type: Optional[str] = None
     isFraud: Optional[int] = None
     amount_range: Optional[List[float]] = None
 
 
 # ==================== SYSTEM ROUTES ====================
+
 
 @app.get("/api/system/health", tags=["System"])
 def get_health() -> Dict[str, Any]:
@@ -60,13 +54,11 @@ def get_metadata() -> Dict[str, str]:
     Dict[str, str]
         Version et date de mise à jour
     """
-    return {
-        "version": "1.0.0",
-        "last_update": "2025-12-20T22:00:00Z"
-    }
+    return {"version": "1.0.0", "last_update": "2025-12-20T22:00:00Z"}
 
 
 # ==================== TRANSACTIONS ROUTES ====================
+
 
 @app.get("/api/transactions", tags=["Transactions"])
 def read_transactions(
@@ -75,7 +67,7 @@ def read_transactions(
     type: Optional[str] = None,
     isFraud: Optional[int] = None,
     min_amount: Optional[float] = None,
-    max_amount: Optional[float] = None
+    max_amount: Optional[float] = None,
 ) -> Dict[str, Any]:
     """
     Liste paginée des transactions avec filtres optionnels.
@@ -171,9 +163,14 @@ def get_transactions_by_customer(customer_id: str) -> Dict[str, Any]:
     Dict[str, Any]
         Transactions du client
     """
-    transactions: List[Dict[str, Any]
-                       ] = transactions_service.get_transactions_by_customer(customer_id)
-    return {"customer_id": customer_id, "count": len(transactions), "transactions": transactions}
+    transactions: List[Dict[str, Any]] = (
+        transactions_service.get_transactions_by_customer(customer_id)
+    )
+    return {
+        "customer_id": customer_id,
+        "count": len(transactions),
+        "transactions": transactions,
+    }
 
 
 @app.get("/api/transactions/to-customer/{customer_id}", tags=["Transactions"])
@@ -191,9 +188,14 @@ def get_transactions_to_customer(customer_id: str) -> Dict[str, Any]:
     Dict[str, Any]
         Transactions reçues
     """
-    transactions: List[Dict[str, Any]
-                       ] = transactions_service.get_transactions_to_customer(customer_id)
-    return {"customer_id": customer_id, "count": len(transactions), "transactions": transactions}
+    transactions: List[Dict[str, Any]] = (
+        transactions_service.get_transactions_to_customer(customer_id)
+    )
+    return {
+        "customer_id": customer_id,
+        "count": len(transactions),
+        "transactions": transactions,
+    }
 
 
 @app.post("/api/transactions/search", tags=["Transactions"])
@@ -222,7 +224,7 @@ def search_transactions(request: SearchRequest) -> Dict[str, Any]:
         type_filter=request.type,
         is_fraud=request.isFraud,
         amount_min=amount_min,
-        amount_max=amount_max
+        amount_max=amount_max,
     )
 
     return {"count": len(results), "transactions": results}
@@ -243,14 +245,16 @@ def get_transaction(transaction_id: str) -> Dict[str, Any]:
     Dict[str, Any]
         La transaction trouvée
     """
-    transaction: Optional[Dict[str, Any]
-                          ] = transactions_service.get_transaction_by_id(transaction_id)
+    transaction: Optional[Dict[str, Any]] = transactions_service.get_transaction_by_id(
+        transaction_id
+    )
     if transaction is None:
         raise HTTPException(status_code=404, detail="Transaction non trouvée")
     return transaction
 
 
 # ==================== STATS ROUTES ====================
+
 
 @app.get("/api/stats/overview", tags=["Statistiques"], response_model=OverviewResponse)
 def get_stats_overview() -> Dict[str, Any]:
@@ -265,7 +269,11 @@ def get_stats_overview() -> Dict[str, Any]:
     return stats_service.get_overview()
 
 
-@app.get("/api/stats/amount-distribution", tags=["Statistiques"], response_model=AmountDistributionBin)
+@app.get(
+    "/api/stats/amount-distribution",
+    tags=["Statistiques"],
+    response_model=AmountDistributionBin,
+)
 def get_amount_distribution() -> Dict[str, Any]:
     """
     Histogramme du montant des transactions (en classes de valeurs).
@@ -306,8 +314,10 @@ def get_daily_stats() -> List[Dict[str, Any]]:
 
 # ==================== FRAUD ROUTES ====================
 
+
 class FraudPredictRequest(BaseModel):
     """Modèle pour la prédiction de fraude."""
+
     type: str  # use_chip type
     amount: float
     merchant_city: Optional[str] = ""
@@ -359,11 +369,12 @@ def predict_fraud(request: FraudPredictRequest) -> Dict[str, Any]:
         transaction_type=request.type,
         amount=request.amount,
         merchant_city=request.merchant_city,
-        merchant_state=request.merchant_state
+        merchant_state=request.merchant_state,
     )
 
 
 # ==================== CUSTOMERS ROUTES ====================
+
 
 @app.get("/api/customers", tags=["Clients"], response_model=CustomerListResponse)
 def get_customers(page: int = 1, limit: int = 10) -> Dict[str, Any]:
@@ -405,7 +416,9 @@ def get_top_customers(n: int = 10, by: str = "volume") -> List[Dict[str, Any]]:
     return customer_service.get_top_customers(n, by)
 
 
-@app.get("/api/customers/{customer_id}", tags=["Clients"], response_model=CustomerProfile)
+@app.get(
+    "/api/customers/{customer_id}", tags=["Clients"], response_model=CustomerProfile
+)
 def get_customer_profile(customer_id: str) -> Dict[str, Any]:
     """
     Profil client synthétique.
