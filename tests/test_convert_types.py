@@ -53,12 +53,18 @@ def test_fraud_prediction_zero_balance():
     assert "reasons" in prediction
 
 
-def test_fraud_prediction_precision_zero_flagged():
-    """Test du calcul de précision quand aucune fraude n'est flaggée."""
-    # Ce test utilise les données de test où flagged peut être 0
-    # La précision devrait être 0.0 dans ce cas
+def test_fraud_prediction_normal_transaction():
+    """Test de prédiction pour une transaction normale."""
+    from banking_api.services.fraud_detection_service import predict_fraud
 
+    prediction = predict_fraud(
+        transaction_type="Chip Transaction",
+        amount=50.0,
+        merchant_city="Paris",
+        merchant_state="FR",
+    )
 
-def test_fraud_prediction_recall_zero_frauds():
-    """Test du calcul de rappel quand il n'y a pas de fraude."""
-    # Ce test vérifie que le calcul de rappel gère correctement le cas où total_frauds = 0
+    assert "isFraud" in prediction
+    assert "probability" in prediction
+    assert "reasons" in prediction
+    assert isinstance(prediction["isFraud"], bool)
