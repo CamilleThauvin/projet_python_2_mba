@@ -1,4 +1,10 @@
-# Portfolio asset retrieval management.
+# Portfolio asset retrieval management
+
+![Tests](https://github.com/CamilleThauvin/projet_python_2_mba/workflows/Tests/badge.svg)
+![Linting](https://github.com/CamilleThauvin/projet_python_2_mba/workflows/Linting/badge.svg)
+![Deploy](https://github.com/CamilleThauvin/projet_python_2_mba/workflows/Deploy/badge.svg)
+![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.128.0-009688.svg)
 
 Le but de ce projet est de développer une API permettant d'exposer une API des transactions fictives.
 Les technos à utiliser sont :
