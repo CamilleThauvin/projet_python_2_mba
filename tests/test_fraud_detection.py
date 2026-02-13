@@ -1,7 +1,5 @@
 """Tests pour le service de détection de fraude."""
 
-import pytest
-
 from banking_api.services import fraud_detection_service
 
 
@@ -18,7 +16,7 @@ class TestFraudPrediction:
         )
 
         # Vérifications
-        assert result["isFraud"] == True
+        assert result["isFraud"] is True
         assert result["probability"] >= 0.5
         assert len(result["reasons"]) > 0
         assert "Montant très élevé" in result["reasons"]
@@ -33,7 +31,7 @@ class TestFraudPrediction:
         )
 
         # Vérifications
-        assert result["isFraud"] == False
+        assert result["isFraud"] is False
         assert result["probability"] < 0.5
         assert result["reasons"] == ["Transaction normale"]
 
@@ -46,7 +44,7 @@ class TestFraudPrediction:
             merchant_state="UK",
         )
 
-        assert result["isFraud"] == True
+        assert result["isFraud"] is True
         assert "Montant négatif détecté" in result["reasons"]
 
     def test_predict_fraud_very_low_amount(self):

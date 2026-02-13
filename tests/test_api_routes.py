@@ -1,7 +1,5 @@
 """Tests pour les routes de l'API."""
 
-import pytest
-
 
 class TestSystemRoutes:
     """Tests pour les routes système."""
@@ -63,7 +61,7 @@ class TestFraudRoutes:
         assert "isFraud" in data
         assert "probability" in data
         assert "reasons" in data
-        assert data["isFraud"] == True
+        assert data["isFraud"] is True
 
     def test_fraud_predict_endpoint_normal(self, client, sample_normal_transaction):
         """Test : POST /api/fraud/predict avec transaction normale."""
@@ -72,7 +70,7 @@ class TestFraudRoutes:
         assert response.status_code == 200
         data = response.json()
 
-        assert data["isFraud"] == False
+        assert data["isFraud"] is False
         assert data["probability"] < 0.5
 
 
