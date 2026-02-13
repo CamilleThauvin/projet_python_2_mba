@@ -1,7 +1,6 @@
 """Tests pour les fonctions utilitaires."""
 
-from banking_api.services.transactions_service import \
-    _convert_transaction_types
+from banking_api.services.transactions_service import _convert_transaction_types
 
 
 def test_convert_transaction_types():

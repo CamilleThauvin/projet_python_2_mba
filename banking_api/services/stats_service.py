@@ -7,9 +7,11 @@ import numpy as np
 import pandas as pd
 from fastapi import HTTPException
 
-from banking_api.services.data_cache import (get_basic_stats,
-                                             get_cached_dataframe,
-                                             get_stats_by_type_cached)
+from banking_api.services.data_cache import (
+    get_basic_stats,
+    get_cached_dataframe,
+    get_stats_by_type_cached,
+)
 
 
 def _get_csv_path() -> str:
