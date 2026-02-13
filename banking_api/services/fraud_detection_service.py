@@ -1,8 +1,14 @@
 """Service de détection et analyse de fraude."""
+
 import os
-from typing import Dict, List, Any
-import pandas as pd
+from typing import Any, Dict, List
+
 from fastapi import HTTPException
+
+from banking_api.services.data_cache import (
+    get_fraud_by_type_cached,
+    get_fraud_summary_cached,
+)
 
 
 def _get_csv_path() -> str:
@@ -14,14 +20,16 @@ def _get_csv_path() -> str:
     str
         Chemin absolu vers le fichier CSV
     """
-    base_dir: str = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    base_dir: str = os.path.dirname(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    )
     csv_path: str = os.path.join(base_dir, "data", "transactions_data.csv")
     return csv_path
 
 
 def get_fraud_summary() -> Dict[str, Any]:
     """
-    Vue d'ensemble de la fraude dans le dataset.
+    Vue d'ensemble de la fraude dans le dataset (avec cache).
 
     Returns
     -------
@@ -32,32 +40,15 @@ def get_fraud_summary() -> Dict[str, Any]:
         - precision : précision de la détection
         - recall : rappel de la détection
     """
-    csv_path: str = _get_csv_path()
-
-    if not os.path.exists(csv_path):
-        raise HTTPException(status_code=404, detail="Fichier de données non trouvé")
-
     try:
-        df: pd.DataFrame = pd.read_csv(csv_path)
-
-        # Add fraud detection based on errors column
-        df['isFraud'] = df['errors'].apply(
-            lambda x: 1 if pd.notna(x) and str(x).strip() != '' else 0
-        )
-
-        # For this dataset, we'll treat all fraud as flagged
-        total_frauds: int = df['isFraud'].sum()
-        flagged: int = total_frauds  # All frauds are considered flagged in this dataset
-
-        # Simplified metrics since we don't have separate flagging
-        precision: float = 1.0 if flagged > 0 else 0.0
-        recall: float = 1.0 if total_frauds > 0 else 0.0
+        # Utiliser le cache pour des performances optimales
+        total_frauds, flagged, precision, recall = get_fraud_summary_cached()
 
         return {
             "total_frauds": int(total_frauds),
             "flagged": int(flagged),
             "precision": round(precision, 2),
-            "recall": round(recall, 2)
+            "recall": round(recall, 2),
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erreur lors du calcul: {str(e)}")
@@ -65,7 +56,7 @@ def get_fraud_summary() -> Dict[str, Any]:
 
 def get_fraud_by_type() -> List[Dict[str, Any]]:
     """
-    Répartition du taux de fraude par type de transaction.
+    Répartition du taux de fraude par type de transaction (avec cache).
 
     Returns
     -------
@@ -76,36 +67,23 @@ def get_fraud_by_type() -> List[Dict[str, Any]]:
         - fraud_count : nombre de fraudes
         - fraud_rate : taux de fraude (%)
     """
-    csv_path: str = _get_csv_path()
-
-    if not os.path.exists(csv_path):
-        raise HTTPException(status_code=404, detail="Fichier de données non trouvé")
-
     try:
-        df: pd.DataFrame = pd.read_csv(csv_path)
-
-        # Add fraud detection based on errors column
-        df['isFraud'] = df['errors'].apply(
-            lambda x: 1 if pd.notna(x) and str(x).strip() != '' else 0
-        )
-
-        # Grouper par use_chip (transaction type)
-        fraud_by_type = df.groupby('use_chip').agg({
-            'isFraud': ['count', 'sum', 'mean']
-        }).reset_index()
-
-        # Aplatir les colonnes
-        fraud_by_type.columns = ['type', 'total_transactions', 'fraud_count', 'fraud_rate']
+        # Utiliser le cache
+        fraud_by_type = get_fraud_by_type_cached()
 
         # Convertir en liste de dictionnaires
         results: List[Dict[str, Any]] = []
         for _, row in fraud_by_type.iterrows():
-            results.append({
-                'type': row['type'],
-                'total_transactions': int(row['total_transactions']),
-                'fraud_count': int(row['fraud_count']),
-                'fraud_rate': round(float(row['fraud_rate']) * 100, 2)  # Convertir en pourcentage
-            })
+            results.append(
+                {
+                    "type": row["type"],
+                    "total_transactions": int(row["total_transactions"]),
+                    "fraud_count": int(row["fraud_count"]),
+                    "fraud_rate": round(
+                        float(row["fraud_rate"]) * 100, 2
+                    ),  # Convertir en pourcentage
+                }
+            )
 
         return results
     except Exception as e:
@@ -116,7 +94,7 @@ def predict_fraud(
     transaction_type: str,
     amount: float,
     merchant_city: str = "",
-    merchant_state: str = ""
+    merchant_state: str = "",
 ) -> Dict[str, Any]:
     """
     Prédiction simple de fraude basée sur des règles heuristiques.
@@ -179,5 +157,5 @@ def predict_fraud(
     return {
         "isFraud": is_fraud,
         "probability": round(probability, 2),
-        "reasons": reasons if is_fraud else ["Transaction normale"]
+        "reasons": reasons if is_fraud else ["Transaction normale"],
     }

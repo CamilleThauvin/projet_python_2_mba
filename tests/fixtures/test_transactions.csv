@@ -1,0 +1,11 @@
+id,date,client_id,card_id,amount,use_chip,merchant_id,merchant_city,merchant_state,zip,mcc,errors
+1001,2023-01-01 10:00:00,100,200,$50.00,Chip Transaction,5000,New York,NY,10001.0,5411,
+1002,2023-01-01 10:05:00,101,201,$15000.00,Online Transaction,5001,Los Angeles,CA,90001.0,5812,
+1003,2023-01-01 10:10:00,102,202,$25.50,Swipe Transaction,5002,Chicago,IL,60601.0,5999,
+1004,2023-01-01 10:15:00,103,203,$-100.00,Chip Transaction,5003,Houston,TX,77001.0,5411,Bad PIN
+1005,2023-01-01 10:20:00,104,204,$75.00,Online Transaction,5004,Phoenix,AZ,85001.0,5812,
+1006,2023-01-01 10:25:00,105,205,$0.50,Chip Transaction,5005,Philadelphia,PA,19019.0,5411,
+1007,2023-01-01 10:30:00,106,206,$200.00,Swipe Transaction,5006,San Antonio,TX,78201.0,5999,
+1008,2023-01-01 10:35:00,107,207,$500.00,Online Transaction,5007,San Diego,CA,92101.0,5812,
+1009,2023-01-01 10:40:00,108,208,$30.00,Chip Transaction,5008,Dallas,TX,75201.0,5411,
+1010,2023-01-01 10:45:00,109,209,$125.00,Swipe Transaction,5009,San Jose,CA,95101.0,5999,

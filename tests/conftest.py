@@ -1,96 +1,114 @@
-"""Configuration Pytest et fixtures partagées."""
+"""Configuration pytest et fixtures."""
+
+import os
+
 import pytest
-import pandas as pd
 from fastapi.testclient import TestClient
+
 from banking_api.main import app
 
 
 @pytest.fixture
-def client(mock_csv_path) -> TestClient:
+def client():
     """
     Fixture pour le client de test FastAPI.
 
-    Parameters
-    ----------
-    mock_csv_path : str
-        Mock du chemin CSV (appliqué automatiquement)
-
-    Returns
-    -------
-    TestClient
-        Client de test pour l'API
+    Permet de faire des requêtes HTTP à l'API sans la lancer.
     """
     return TestClient(app)
 
 
 @pytest.fixture
-def sample_csv_path(tmp_path):
-    """
-    Crée un fichier CSV de test avec des données fictives.
-
-    Parameters
-    ----------
-    tmp_path : Path
-        Chemin temporaire fourni par pytest
-
-    Returns
-    -------
-    str
-        Chemin vers le fichier CSV de test
-    """
-    csv_path = tmp_path / "transactions_data.csv"
-
-    # Données de test
-    data = {
-        'step': [1, 1, 2, 2, 3],
-        'type': ['PAYMENT', 'TRANSFER', 'CASH_OUT', 'DEBIT', 'PAYMENT'],
-        'amount': [9839.64, 181.00, 181.00, 52.95, 1234.56],
-        'nameOrig': ['C1231006815', 'C1666544295', 'C1305486145', 'C840083671', 'C1231006815'],
-        'oldbalanceOrg': [170136.00, 181.00, 181.00, 41720.00, 168902.36],
-        'newbalanceOrig': [160296.36, 0.00, 0.00, 41667.05, 167667.80],
-        'nameDest': ['M1979787155', 'C1900366749', 'C840083671', 'C1634788479', 'M1234567890'],
-        'oldbalanceDest': [0.00, 0.00, 21182.00, 41898.00, 0.00],
-        'newbalanceDest': [0.00, 0.00, 21182.00, 41950.95, 0.00],
-        'isFraud': [0, 1, 0, 0, 0],
-        'isFlaggedFraud': [0, 0, 0, 0, 0]
+def sample_fraud_data():
+    """Données de test pour la prédiction de fraude."""
+    return {
+        "type": "Online Transaction",
+        "amount": 15000.0,
+        "merchant_city": "New York",
+        "merchant_state": "NY",
     }
-
-    df = pd.DataFrame(data)
-    df.to_csv(csv_path, index=False)
-
-    return str(csv_path)
 
 
 @pytest.fixture
-def mock_csv_path(monkeypatch, sample_csv_path):
+def sample_normal_transaction():
+    """Données de test pour une transaction normale."""
+    return {
+        "type": "Chip Transaction",
+        "amount": 50.0,
+        "merchant_city": "Paris",
+        "merchant_state": "FR",
+    }
+
+
+@pytest.fixture(scope="session", autouse=True)
+def setup_test_data(monkeypatch_session):
     """
-    Mock le chemin CSV pour utiliser le fichier de test.
+    Configure les chemins de fichiers pour utiliser les données de test en CI/CD.
 
-    Parameters
-    ----------
-    monkeypatch : MonkeyPatch
-        Fixture pytest pour le mocking
-    sample_csv_path : str
-        Chemin vers le CSV de test
+    Vérifie si les vrais fichiers de données existent.
+    Si non (environnement CI/CD), utilise les fichiers de test minimaux.
     """
-    def mock_get_csv_path():
-        return sample_csv_path
+    import banking_api.services.data_cache as data_cache
+    import banking_api.services.fraud_labels_loader as fraud_labels_loader
+    import banking_api.services.transactions_service as transactions_service
 
-    # Mock dans tous les services
-    from banking_api.services import (
-        transactions_service,
-        stats_service,
-        fraud_detection_service,
-        customer_service
-    )
+    # Chemin vers les vrais fichiers
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    real_csv = os.path.join(base_dir, "data", "transactions_data.csv")
+    real_json = os.path.join(base_dir, "data", "train_fraud_labels.json")
 
-    monkeypatch.setattr(transactions_service, '_get_csv_path',
-                        mock_get_csv_path)
-    monkeypatch.setattr(stats_service, '_get_csv_path',
-                        mock_get_csv_path)
-    monkeypatch.setattr(fraud_detection_service, '_get_csv_path',
-                        mock_get_csv_path)
-    monkeypatch.setattr(customer_service, '_get_csv_path',
-                        mock_get_csv_path)
+    # Si les vrais fichiers n'existent pas (CI/CD), utiliser les fixtures
+    if not os.path.exists(real_csv) or not os.path.exists(real_json):
+        test_csv = os.path.join(base_dir, "tests", "fixtures", "test_transactions.csv")
+        test_json = os.path.join(
+            base_dir, "tests", "fixtures", "test_fraud_labels.json"
+        )
 
-    return sample_csv_path
+        # Mock les fonctions de chemin pour utiliser les fichiers de test
+        def mock_csv_path():
+            return test_csv
+
+        def mock_json_path():
+            return test_json
+
+        # Appliquer les mocks
+        monkeypatch_session.setattr(
+            transactions_service, "_get_csv_path", mock_csv_path
+        )
+        monkeypatch_session.setattr(
+            "banking_api.services.customer_service._get_csv_path", mock_csv_path
+        )
+        monkeypatch_session.setattr(
+            "banking_api.services.stats_service._get_csv_path", mock_csv_path
+        )
+        monkeypatch_session.setattr(
+            "banking_api.services.data_cache._get_csv_path", mock_csv_path
+        )
+
+        # Invalider le cache AVANT de mocker pour forcer le rechargement avec les nouvelles données
+        if hasattr(data_cache.get_cached_dataframe, "cache_clear"):
+            data_cache.get_cached_dataframe.cache_clear()
+        if hasattr(fraud_labels_loader.load_fraud_labels, "cache_clear"):
+            fraud_labels_loader.load_fraud_labels.cache_clear()
+
+        # Mock le chargement des labels de fraude
+        def mock_load_fraud_labels():
+            import json
+
+            with open(test_json, "r") as f:
+                data = json.load(f)
+            return data.get("target", {})
+
+        monkeypatch_session.setattr(
+            fraud_labels_loader, "load_fraud_labels", mock_load_fraud_labels
+        )
+
+
+@pytest.fixture(scope="session")
+def monkeypatch_session():
+    """Monkeypatch pour toute la session de test."""
+    from _pytest.monkeypatch import MonkeyPatch
+
+    m = MonkeyPatch()
+    yield m
+    m.undo()

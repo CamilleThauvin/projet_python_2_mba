@@ -1,8 +1,12 @@
 """Service de gestion des profils clients."""
+
 import os
-from typing import Dict, List, Any
+from typing import Any, Dict, List
+
 import pandas as pd
 from fastapi import HTTPException
+
+from banking_api.services.data_cache import get_cached_dataframe
 
 
 def _get_csv_path() -> str:
@@ -14,7 +18,9 @@ def _get_csv_path() -> str:
     str
         Chemin absolu vers le fichier CSV
     """
-    base_dir: str = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    base_dir: str = os.path.dirname(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    )
     csv_path: str = os.path.join(base_dir, "data", "transactions_data.csv")
     return csv_path
 
@@ -48,7 +54,7 @@ def get_customers(page: int = 1, limit: int = 10) -> Dict[str, Any]:
         df: pd.DataFrame = pd.read_csv(csv_path)
 
         # Obtenir les clients uniques (client_id)
-        unique_customers: pd.Series = df['client_id'].unique()
+        unique_customers: pd.Series = df["client_id"].unique()
         total: int = len(unique_customers)
 
         # Pagination
@@ -61,10 +67,12 @@ def get_customers(page: int = 1, limit: int = 10) -> Dict[str, Any]:
             "page": page,
             "limit": limit,
             "total": total,
-            "customers": customers_page
+            "customers": customers_page,
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erreur lors de la lecture: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Erreur lors de la lecture: {str(e)}"
+        )
 
 
 def get_customer_profile(customer_id: str) -> Dict[str, Any]:
@@ -93,26 +101,19 @@ def get_customer_profile(customer_id: str) -> Dict[str, Any]:
         raise HTTPException(status_code=404, detail="Fichier de données non trouvé")
 
     try:
-        df: pd.DataFrame = pd.read_csv(csv_path)
-
-        # Clean amount column
-        df['amount'] = df['amount'].astype(str).str.replace('$', '').str.replace(',', '').astype(float)
-
-        # Add fraud detection
-        df['isFraud'] = df['errors'].apply(
-            lambda x: 1 if pd.notna(x) and str(x).strip() != '' else 0
-        )
+        # Utiliser le DataFrame en cache (déjà nettoyé et avec isFraud)
+        df = get_cached_dataframe()
 
         # Filtrer les transactions du client
-        customer_transactions: pd.DataFrame = df[df['client_id'] == int(customer_id)]
+        customer_transactions: pd.DataFrame = df[df["client_id"] == int(customer_id)]
 
         if len(customer_transactions) == 0:
             raise HTTPException(status_code=404, detail="Client non trouvé")
 
         transactions_count: int = len(customer_transactions)
-        avg_amount: float = customer_transactions['amount'].mean()
-        total_amount: float = customer_transactions['amount'].sum()
-        fraud_count: int = customer_transactions['isFraud'].sum()
+        avg_amount: float = customer_transactions["amount"].mean()
+        total_amount: float = customer_transactions["amount"].sum()
+        fraud_count: int = customer_transactions["isFraud"].sum()
         fraudulent: bool = fraud_count > 0
 
         return {
@@ -121,12 +122,14 @@ def get_customer_profile(customer_id: str) -> Dict[str, Any]:
             "avg_amount": round(avg_amount, 2),
             "total_amount": round(total_amount, 2),
             "fraudulent": bool(fraudulent),
-            "fraud_count": int(fraud_count)
+            "fraud_count": int(fraud_count),
         }
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erreur lors de la lecture: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Erreur lors de la lecture: {str(e)}"
+        )
 
 
 def get_top_customers(n: int = 10, by: str = "volume") -> List[Dict[str, Any]]:
@@ -151,35 +154,32 @@ def get_top_customers(n: int = 10, by: str = "volume") -> List[Dict[str, Any]]:
         raise HTTPException(status_code=404, detail="Fichier de données non trouvé")
 
     try:
-        df: pd.DataFrame = pd.read_csv(csv_path)
-
-        # Clean amount column
-        df['amount'] = df['amount'].astype(str).str.replace('$', '').str.replace(',', '').astype(float)
-
-        # Add fraud detection
-        df['isFraud'] = df['errors'].apply(
-            lambda x: 1 if pd.notna(x) and str(x).strip() != '' else 0
-        )
+        # Utiliser le DataFrame en cache (déjà nettoyé et avec isFraud)
+        df = get_cached_dataframe()
 
         # Grouper par client_id
-        customer_stats = df.groupby('client_id').agg({
-            'amount': ['count', 'sum', 'mean'],
-            'isFraud': 'sum'
-        }).reset_index()
+        customer_stats = (
+            df.groupby("client_id")
+            .agg({"amount": ["count", "sum", "mean"], "isFraud": "sum"})
+            .reset_index()
+        )
 
         # Aplatir les colonnes
         customer_stats.columns = [
-            'customer_id',
-            'transaction_count',
-            'total_amount',
-            'avg_amount',
-            'fraud_count']
+            "customer_id",
+            "transaction_count",
+            "total_amount",
+            "avg_amount",
+            "fraud_count",
+        ]
 
         # Trier selon le critère
         if by == "count":
-            customer_stats = customer_stats.sort_values('transaction_count', ascending=False)
+            customer_stats = customer_stats.sort_values(
+                "transaction_count", ascending=False
+            )
         else:  # volume par défaut
-            customer_stats = customer_stats.sort_values('total_amount', ascending=False)
+            customer_stats = customer_stats.sort_values("total_amount", ascending=False)
 
         # Prendre les top N
         top_customers = customer_stats.head(n)
@@ -187,14 +187,16 @@ def get_top_customers(n: int = 10, by: str = "volume") -> List[Dict[str, Any]]:
         # Convertir en liste de dictionnaires
         results: List[Dict[str, Any]] = []
         for _, row in top_customers.iterrows():
-            results.append({
-                'customer_id': int(row['customer_id']),
-                'transaction_count': int(row['transaction_count']),
-                'total_amount': round(float(row['total_amount']), 2),
-                'avg_amount': round(float(row['avg_amount']), 2),
-                'fraud_count': int(row['fraud_count']),
-                'fraudulent': int(row['fraud_count']) > 0
-            })
+            results.append(
+                {
+                    "customer_id": int(row["customer_id"]),
+                    "transaction_count": int(row["transaction_count"]),
+                    "total_amount": round(float(row["total_amount"]), 2),
+                    "avg_amount": round(float(row["avg_amount"]), 2),
+                    "fraud_count": int(row["fraud_count"]),
+                    "fraudulent": int(row["fraud_count"]) > 0,
+                }
+            )
 
         return results
     except Exception as e:
