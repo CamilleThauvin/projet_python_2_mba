@@ -3,12 +3,7 @@
 import pytest
 from fastapi import HTTPException
 
-from banking_api.services import (
-    customer_service,
-    fraud_detection_service,
-    stats_service,
-    transactions_service,
-)
+from banking_api.services import customer_service, transactions_service
 
 
 def test_transactions_service_missing_csv(monkeypatch):
