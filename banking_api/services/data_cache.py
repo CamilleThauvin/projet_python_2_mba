@@ -68,8 +68,15 @@ def get_basic_stats() -> Tuple[int, float, float, str]:
 
 
 @lru_cache(maxsize=1)
-def get_stats_by_type_cached():
-    """Cache les stats par type."""
+def get_stats_by_type_cached() -> pd.DataFrame:
+    """
+    Cache les stats par type.
+
+    Returns
+    -------
+    pd.DataFrame
+        DataFrame avec colonnes: type, count, avg_amount, total_amount
+    """
     df = get_cached_dataframe()
 
     grouped = (
@@ -102,8 +109,15 @@ def get_fraud_summary_cached() -> Tuple[int, int, float, float]:
 
 
 @lru_cache(maxsize=1)
-def get_fraud_by_type_cached():
-    """Cache les stats de fraude par type."""
+def get_fraud_by_type_cached() -> pd.DataFrame:
+    """
+    Cache les stats de fraude par type.
+
+    Returns
+    -------
+    pd.DataFrame
+        DataFrame avec colonnes: type, total_transactions, fraud_count, fraud_rate
+    """
     df = get_cached_dataframe()
 
     fraud_by_type = (
@@ -115,7 +129,7 @@ def get_fraud_by_type_cached():
     return fraud_by_type
 
 
-def clear_cache():
+def clear_cache() -> None:
     """Efface tous les caches (utile pour les tests)."""
     get_cached_dataframe.cache_clear()
     get_basic_stats.cache_clear()
