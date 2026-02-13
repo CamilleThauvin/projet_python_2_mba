@@ -46,13 +46,13 @@ jobs:
 
     - name: Run tests with pytest
       run: |
-        pytest tests/test_api_routes.py tests/test_fraud_detection.py -v --tb=short
+        pytest tests/ -v --tb=short
       env:
         PYTHONPATH: ${{ github.workspace }}
 
     - name: Generate coverage report
       run: |
-        pytest tests/test_api_routes.py tests/test_fraud_detection.py --cov=banking_api --cov-report=xml --cov-report=html
+        pytest tests/ --cov=banking_api --cov-report=xml --cov-report=html
       continue-on-error: true
 
     - name: Upload coverage to artifacts

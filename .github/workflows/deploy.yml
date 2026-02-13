@@ -27,7 +27,7 @@ jobs:
 
     - name: Run tests before deploy
       run: |
-        pytest tests/test_api_routes.py tests/test_fraud_detection.py -v
+        pytest tests/ -v
 
     - name: Build Docker image (optional)
       run: |
