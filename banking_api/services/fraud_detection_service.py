@@ -1,12 +1,13 @@
 """Service de détection et analyse de fraude."""
+
 import os
-from typing import Dict, List, Any
+from typing import Any, Dict, List
+
 import pandas as pd
 from fastapi import HTTPException
-from banking_api.services.data_cache import (
-    get_fraud_summary_cached,
-    get_fraud_by_type_cached
-)
+
+from banking_api.services.data_cache import (get_fraud_by_type_cached,
+                                             get_fraud_summary_cached)
 
 
 def _get_csv_path() -> str:
@@ -18,7 +19,9 @@ def _get_csv_path() -> str:
     str
         Chemin absolu vers le fichier CSV
     """
-    base_dir: str = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    base_dir: str = os.path.dirname(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    )
     csv_path: str = os.path.join(base_dir, "data", "transactions_data.csv")
     return csv_path
 
@@ -44,7 +47,7 @@ def get_fraud_summary() -> Dict[str, Any]:
             "total_frauds": int(total_frauds),
             "flagged": int(flagged),
             "precision": round(precision, 2),
-            "recall": round(recall, 2)
+            "recall": round(recall, 2),
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erreur lors du calcul: {str(e)}")
@@ -70,12 +73,16 @@ def get_fraud_by_type() -> List[Dict[str, Any]]:
         # Convertir en liste de dictionnaires
         results: List[Dict[str, Any]] = []
         for _, row in fraud_by_type.iterrows():
-            results.append({
-                'type': row['type'],
-                'total_transactions': int(row['total_transactions']),
-                'fraud_count': int(row['fraud_count']),
-                'fraud_rate': round(float(row['fraud_rate']) * 100, 2)  # Convertir en pourcentage
-            })
+            results.append(
+                {
+                    "type": row["type"],
+                    "total_transactions": int(row["total_transactions"]),
+                    "fraud_count": int(row["fraud_count"]),
+                    "fraud_rate": round(
+                        float(row["fraud_rate"]) * 100, 2
+                    ),  # Convertir en pourcentage
+                }
+            )
 
         return results
     except Exception as e:
@@ -86,7 +93,7 @@ def predict_fraud(
     transaction_type: str,
     amount: float,
     merchant_city: str = "",
-    merchant_state: str = ""
+    merchant_state: str = "",
 ) -> Dict[str, Any]:
     """
     Prédiction simple de fraude basée sur des règles heuristiques.
@@ -149,5 +156,5 @@ def predict_fraud(
     return {
         "isFraud": is_fraud,
         "probability": round(probability, 2),
-        "reasons": reasons if is_fraud else ["Transaction normale"]
+        "reasons": reasons if is_fraud else ["Transaction normale"],
     }

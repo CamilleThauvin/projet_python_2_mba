@@ -1,4 +1,5 @@
 """Tests pour les routes de l'API."""
+
 import pytest
 
 
@@ -11,9 +12,9 @@ class TestSystemRoutes:
 
         assert response.status_code == 200
         data = response.json()
-        assert 'status' in data
-        assert data['status'] == 'ok'
-        assert 'dataset_loaded' in data
+        assert "status" in data
+        assert data["status"] == "ok"
+        assert "dataset_loaded" in data
 
     def test_metadata_endpoint(self, client):
         """Test : endpoint de métadonnées fonctionne."""
@@ -21,8 +22,8 @@ class TestSystemRoutes:
 
         assert response.status_code == 200
         data = response.json()
-        assert 'version' in data
-        assert 'last_update' in data
+        assert "version" in data
+        assert "last_update" in data
 
 
 class TestFraudRoutes:
@@ -36,10 +37,10 @@ class TestFraudRoutes:
         data = response.json()
 
         # Vérifier la structure
-        assert 'total_frauds' in data
-        assert 'flagged' in data
-        assert 'precision' in data
-        assert 'recall' in data
+        assert "total_frauds" in data
+        assert "flagged" in data
+        assert "precision" in data
+        assert "recall" in data
 
     def test_fraud_by_type_endpoint(self, client):
         """Test : GET /api/fraud/by-type."""
@@ -59,10 +60,10 @@ class TestFraudRoutes:
         assert response.status_code == 200
         data = response.json()
 
-        assert 'isFraud' in data
-        assert 'probability' in data
-        assert 'reasons' in data
-        assert data['isFraud'] == True
+        assert "isFraud" in data
+        assert "probability" in data
+        assert "reasons" in data
+        assert data["isFraud"] == True
 
     def test_fraud_predict_endpoint_normal(self, client, sample_normal_transaction):
         """Test : POST /api/fraud/predict avec transaction normale."""
@@ -71,8 +72,8 @@ class TestFraudRoutes:
         assert response.status_code == 200
         data = response.json()
 
-        assert data['isFraud'] == False
-        assert data['probability'] < 0.5
+        assert data["isFraud"] == False
+        assert data["probability"] < 0.5
 
 
 class TestStatsRoutes:
@@ -86,14 +87,14 @@ class TestStatsRoutes:
         data = response.json()
 
         # Vérifier la structure
-        assert 'total_transactions' in data
-        assert 'fraud_rate' in data
-        assert 'avg_amount' in data
-        assert 'most_common_type' in data
+        assert "total_transactions" in data
+        assert "fraud_rate" in data
+        assert "avg_amount" in data
+        assert "most_common_type" in data
 
         # Vérifier les types
-        assert isinstance(data['total_transactions'], int)
-        assert isinstance(data['fraud_rate'], float)
+        assert isinstance(data["total_transactions"], int)
+        assert isinstance(data["fraud_rate"], float)
 
     def test_stats_by_type_endpoint(self, client):
         """Test : GET /api/stats/by-type."""
@@ -107,9 +108,9 @@ class TestStatsRoutes:
 
         # Vérifier la structure du premier élément
         first = data[0]
-        assert 'type' in first
-        assert 'count' in first
-        assert 'avg_amount' in first
+        assert "type" in first
+        assert "count" in first
+        assert "avg_amount" in first
 
 
 class TestTransactionRoutes:
@@ -123,13 +124,13 @@ class TestTransactionRoutes:
         data = response.json()
 
         # Vérifier la pagination
-        assert 'page' in data
-        assert 'limit' in data
-        assert 'total' in data
-        assert 'transactions' in data
+        assert "page" in data
+        assert "limit" in data
+        assert "total" in data
+        assert "transactions" in data
 
         # Vérifier que la limite est respectée
-        assert len(data['transactions']) <= 10
+        assert len(data["transactions"]) <= 10
 
     def test_transaction_types_endpoint(self, client):
         """Test : GET /api/transactions/types."""
@@ -138,6 +139,6 @@ class TestTransactionRoutes:
         assert response.status_code == 200
         data = response.json()
 
-        assert 'types' in data
-        assert isinstance(data['types'], list)
-        assert len(data['types']) > 0
+        assert "types" in data
+        assert isinstance(data["types"], list)
+        assert len(data["types"]) > 0
