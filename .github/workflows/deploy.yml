@@ -27,9 +27,7 @@ jobs:
 
     - name: Run tests before deploy
       run: |
-        # Tests désactivés temporairement
-        # pytest tests/ -v
-        echo "Tests à implémenter avant déploiement"
+        pytest tests/test_api_routes.py tests/test_fraud_detection.py -v
 
     - name: Build Docker image (optional)
       run: |

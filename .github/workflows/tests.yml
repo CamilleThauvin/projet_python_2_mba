@@ -46,24 +46,18 @@ jobs:
 
     - name: Run tests with pytest
       run: |
-        # Tests désactivés temporairement - pas encore créés
-        # pytest tests/ -v --tb=short
-        echo "Tests à implémenter (voir GUIDE_TESTS.md)"
-      continue-on-error: true
+        pytest tests/test_api_routes.py tests/test_fraud_detection.py -v --tb=short
       env:
         PYTHONPATH: ${{ github.workspace }}
 
     - name: Generate coverage report
       run: |
-        # Coverage désactivée temporairement
-        # pytest tests/ --cov=banking_api --cov-report=xml --cov-report=html
-        echo "Coverage à implémenter avec les tests"
+        pytest tests/test_api_routes.py tests/test_fraud_detection.py --cov=banking_api --cov-report=xml --cov-report=html
       continue-on-error: true
 
-    # Upload coverage désactivé (pas de tests encore)
-    # - name: Upload coverage to artifacts
-    #   uses: actions/upload-artifact@v3
-    #   if: always()
-    #   with:
-    #     name: coverage-report
-    #     path: htmlcov/
+    - name: Upload coverage to artifacts
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: coverage-report
+        path: htmlcov/
