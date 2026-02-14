@@ -312,16 +312,21 @@ def get_stats_by_type() -> List[Dict[str, Any]]:
 
 
 @app.get("/api/stats/daily", tags=["Statistiques"], response_model=List[DailyStats])
-def get_daily_stats() -> List[Dict[str, Any]]:
+def get_daily_stats(days: int = 7) -> List[Dict[str, Any]]:
     """
-    Moyenne et volume des transactions par jour (step).
+    Moyenne et volume des transactions par jour.
+
+    Parameters
+    ----------
+    days : int
+        Nombre de jours (défaut: 7)
 
     Returns
     -------
     List[Dict[str, Any]]
         Statistiques quotidiennes
     """
-    return stats_service.get_daily_stats()
+    return stats_service.get_daily_stats(days)
 
 
 # ==================== FRAUD ROUTES ====================

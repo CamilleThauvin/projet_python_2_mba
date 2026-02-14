@@ -10,6 +10,7 @@ from fastapi import HTTPException
 from banking_api.services.data_cache import (
     get_basic_stats,
     get_cached_dataframe,
+    get_daily_stats_cached,
     get_stats_by_type_cached,
 )
 
@@ -148,49 +149,25 @@ def get_stats_by_type() -> List[Dict[str, Any]]:
         raise HTTPException(status_code=500, detail=f"Erreur lors du calcul: {str(e)}")
 
 
-def get_daily_stats() -> List[Dict[str, Any]]:
+def get_daily_stats(days: int = 7) -> List[Dict[str, Any]]:
     """
     Moyenne et volume des transactions par jour (avec cache).
+
+    Parameters
+    ----------
+    days : int
+        Nombre de jours à retourner (défaut: 7)
 
     Returns
     -------
     List[Dict[str, Any]]
         Liste de dictionnaires contenant pour chaque jour :
-        - day : numéro du jour (step)
+        - day : date au format YYYY-MM-DD
         - count : nombre de transactions
         - avg_amount : montant moyen
         - total_amount : montant total
     """
     try:
-        # Utiliser le DataFrame en cache
-        df = get_cached_dataframe()
-
-        # Convert date to datetime and extract date only
-        df["date"] = pd.to_datetime(df["date"]).dt.date
-
-        # Grouper par date
-        daily_stats = (
-            df.groupby("date").agg({"amount": ["count", "mean", "sum"]}).reset_index()
-        )
-
-        # Aplatir les colonnes
-        daily_stats.columns = ["day", "count", "avg_amount", "total_amount"]
-
-        # Convert date to string for JSON serialization
-        daily_stats["day"] = daily_stats["day"].astype(str)
-
-        # Convertir en liste de dictionnaires
-        results: List[Dict[str, Any]] = []
-        for _, row in daily_stats.iterrows():
-            results.append(
-                {
-                    "day": str(row["day"]),
-                    "count": int(row["count"]),
-                    "avg_amount": round(float(row["avg_amount"]), 2),
-                    "total_amount": round(float(row["total_amount"]), 2),
-                }
-            )
-
-        return results
+        return get_daily_stats_cached(days)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erreur lors du calcul: {str(e)}")
