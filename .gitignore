@@ -65,3 +65,4 @@ htmlcov/
 
 # Logs
 *.log
+data/transactions_sample.csv
