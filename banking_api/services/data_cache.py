@@ -140,3 +140,46 @@ def clear_cache() -> None:
     get_stats_by_type_cached.cache_clear()
     get_fraud_summary_cached.cache_clear()
     get_fraud_by_type_cached.cache_clear()
+    get_daily_stats_cached.cache_clear()
+
+@lru_cache(maxsize=30)
+def get_daily_stats_cached(days: int = 7) -> list:
+    """
+    Cache les statistiques journalières.
+
+    Args:
+        days: Nombre de jours à retourner
+
+    Returns:
+        list: Liste des statistiques par jour
+    """
+    df = get_cached_dataframe()
+
+    # Convertir la date en datetime
+    df["date"] = pd.to_datetime(df["date"])
+
+    # Trier par date décroissante et prendre les N derniers jours
+    df_sorted = df.sort_values("date", ascending=False)
+
+    # Grouper par jour
+    daily_stats = (
+        df_sorted.groupby(df_sorted["date"].dt.date)
+        .agg({"amount": ["count", "mean", "sum"]})
+        .reset_index()
+    )
+
+    daily_stats.columns = ["day", "count", "avg_amount", "total_amount"]
+    daily_stats = daily_stats.head(days)
+
+    # Convertir en liste de dictionnaires
+    result = [
+        {
+            "day": str(row["day"]),
+            "count": int(row["count"]),
+            "avg_amount": round(row["avg_amount"], 2),
+            "total_amount": round(row["total_amount"], 2)
+        }
+        for _, row in daily_stats.iterrows()
+    ]
+
+    return result
