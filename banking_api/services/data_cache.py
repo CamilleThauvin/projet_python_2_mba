@@ -14,6 +14,10 @@ def _get_csv_path() -> str:
     base_dir: str = os.path.dirname(
         os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     )
+    # Utiliser transactions_sample.csv pour un chargement plus rapide
+    sample_path = os.path.join(base_dir, "data", "transactions_sample.csv")
+    if os.path.exists(sample_path):
+        return sample_path
     return os.path.join(base_dir, "data", "transactions_data.csv")
 
 
