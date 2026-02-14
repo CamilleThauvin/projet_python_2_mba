@@ -141,6 +141,8 @@ def clear_cache() -> None:
     get_fraud_summary_cached.cache_clear()
     get_fraud_by_type_cached.cache_clear()
     get_daily_stats_cached.cache_clear()
+    get_indexed_dataframe.cache_clear()
+    
 
 @lru_cache(maxsize=30)
 def get_daily_stats_cached(days: int = 7) -> list:
@@ -168,6 +170,7 @@ def get_daily_stats_cached(days: int = 7) -> list:
         .reset_index()
     )
 
+
     daily_stats.columns = ["day", "count", "avg_amount", "total_amount"]
     daily_stats = daily_stats.head(days)
 
@@ -183,3 +186,16 @@ def get_daily_stats_cached(days: int = 7) -> list:
     ]
 
     return result
+
+@lru_cache(maxsize=1)
+def get_indexed_dataframe() -> pd.DataFrame:
+    """
+    Retourne le DataFrame avec index sur client_id pour des recherches rapides.
+
+    Returns:
+        pd.DataFrame: DataFrame indexé par client_id
+    """
+    df = get_cached_dataframe()
+    # Créer un index sur client_id pour des recherches plus rapides
+    df_indexed = df.set_index("client_id", drop=False)
+    return df_indexed
