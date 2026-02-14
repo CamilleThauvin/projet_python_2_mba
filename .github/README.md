@@ -1,5 +1,11 @@
 # 🏦 Banking Transactions API
 
+##  Application Web Streamlit
+
+Interface web métier développée séparément.
+
+📦 **Repository Streamlit** : [banking-api-streamlit](https://github.com/payebie/banking-api-streamlit)
+
 <div align="center">
 
 ![Tests](https://github.com/CamilleThauvin/projet_python_2_mba/workflows/Tests/badge.svg)
@@ -394,6 +400,7 @@ mypy banking_api --ignore-missing-imports
 - ✅ **Clean Code** - Principes SOLID
 
 ---
+
 
 ## 🔄 CI/CD
 
