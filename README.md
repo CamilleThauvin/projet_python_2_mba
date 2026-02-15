@@ -30,7 +30,7 @@
 - [Fonctionnalités](#-fonctionnalités)
 - [Technologies](#-technologies)
 - [Prérequis](#-prérequis)
-- [Installation](#-installation)
+- [Installation](#-installation) 
 - [Utilisation](#-utilisation)
 - [Documentation API](#-documentation-api)
 - [Architecture](#-architecture)
