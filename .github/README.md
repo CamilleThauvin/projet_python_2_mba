@@ -1,3 +1,11 @@
+# 🏦 Banking Transactions API
+
+##  Application Web Streamlit
+
+Interface web métier développée séparément.
+
+📦 **Repository Streamlit** : [banking-api-streamlit](https://github.com/payebie/banking-api-streamlit)
+
 # CI/CD Configuration
 
 Ce dossier contient les workflows GitHub Actions pour automatiser les tests, la qualité du code et le déploiement.
